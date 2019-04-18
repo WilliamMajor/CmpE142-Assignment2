@@ -24,6 +24,7 @@ class Jobs
         void setFinishT(int argFinishT);
         void setTotalT(int TotalT);
         void setResponceT(int ResponceT);
+        bool waiting;
     private:
         int JID;
         int AT;

@@ -7,6 +7,14 @@ using namespace std;
 //Constructors
 Jobs::Jobs()
 {
+    JID         = 0;
+    AT          = 0;
+    Dur         = 0;
+    StartT      = 0;
+    FinishT     = 0;
+    TotalT      = 0;
+    ResponceT   = 0;
+    waiting     = false;
 }
 
 Jobs::~Jobs()

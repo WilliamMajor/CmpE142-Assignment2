@@ -1,5 +1,7 @@
 #include "Jobs.h"
 #include <iostream>
+
+
 using namespace std;
 
 //Constructors
@@ -39,7 +41,7 @@ int Jobs::getStartT() const
     return StartT;
 }
 
-int Jobs::getFinsihT() const
+int Jobs::getFinishT() const
 {
     return FinishT;
 }
@@ -89,3 +91,4 @@ void Jobs::setResponceT(int argResponceT)
 {
     ResponceT = argResponceT;
 }
+

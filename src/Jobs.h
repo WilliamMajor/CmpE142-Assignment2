@@ -14,7 +14,7 @@ class Jobs
         int getAT() const;
         int getDur() const;
         int getStartT() const;
-        int getFinsihT() const;
+        int getFinishT() const;
         int getTotalT() const;
         int getResponceT() const;
         void setJID(int argJID);

@@ -14,7 +14,9 @@ Jobs::Jobs()
     FinishT     = 0;
     TotalT      = 0;
     ResponceT   = 0;
+    RemainT     = 0;
     waiting     = false;
+    started     = false;
 }
 
 Jobs::~Jobs()
@@ -64,6 +66,11 @@ int Jobs::getResponceT() const
     return ResponceT;
 }
 
+int Jobs::getRemainT() const
+{
+    return RemainT;
+}
+
 //Setter Functions
 void Jobs::setJID(int argJID)
 {
@@ -98,5 +105,10 @@ void Jobs::setTotalT(int argTotalT)
 void Jobs::setResponceT(int argResponceT)
 {
     ResponceT = argResponceT;
+}
+
+void Jobs::setRemainT(int argRemainT)
+{
+    RemainT = argRemainT;
 }
 

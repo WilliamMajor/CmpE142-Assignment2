@@ -17,14 +17,17 @@ class Jobs
         int getFinishT() const;
         int getTotalT() const;
         int getResponceT() const;
+        int getRemainT() const;
         void setJID(int argJID);
         void setAT(int argAT);
         void setDur(int argDur);
         void setStartT(int argStartT);
         void setFinishT(int argFinishT);
-        void setTotalT(int TotalT);
-        void setResponceT(int ResponceT);
+        void setTotalT(int argTotalT);
+        void setResponceT(int argResponceT);
+        void setRemainT(int argRemainT);
         bool waiting;
+        bool started;
     private:
         int JID;
         int AT;
@@ -33,5 +36,6 @@ class Jobs
         int FinishT;
         int TotalT;
         int ResponceT;
+        int RemainT;
 };
 #endif

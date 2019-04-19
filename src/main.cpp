@@ -17,10 +17,13 @@ void parseline(string procInput, Jobs& newjob);
 void FIFO(Jobs * JobsArr);
 void SJF(Jobs * JobsArr);
 void BJF(Jobs * JobsArr);
+void STCF(Jobs * JobsArr);
 void bubbleSortAT(Jobs * JobsArr) ;
 void bubbleSortSJF(Jobs * JobsArr, int length, int start);
 void bubbleSortBJF(Jobs * JobsArr, int length, int start);
+void bubbleSortSTCF(Jobs * JobsArr, int length, int start);
 int waitingLine(Jobs * JobsArr, int start, int current_time, int queue_length);
+int waitingLineSTCF(Jobs * JobsArr, int start, int current_time, int queue_length);
 
 //I do not like using this global var, but for right now its what is working
 int jobcount;
@@ -40,7 +43,9 @@ int main(int argc, char *argv[]) {
 
 	//SJF(JobsArr);
 
-	BJF(JobsArr);
+	//BJF(JobsArr);
+	
+	STCF(JobsArr);
 	
 
 
@@ -203,6 +208,7 @@ void SJF(Jobs * JobsArr)
 	}
 	
 }
+
 void BJF(Jobs * JobsArr)
 {
 	int current_time = 0;
@@ -246,6 +252,77 @@ void BJF(Jobs * JobsArr)
 	
 }
 
+void STCF(Jobs * JobsArr)
+{
+	int current_time = 0;
+	int queue_length = 0;
+	int count = 0;
+	bool first = true;
+	
+	//sort jobs based on their arrival time
+	bubbleSortAT(JobsArr);
+
+	//set the remaining time for each job
+	for(int idx = 0; idx < jobcount; idx++)
+	{
+		JobsArr[idx].setRemainT(JobsArr[idx].getDur());
+	}
+	//advance to the first job
+	current_time = JobsArr[0].getAT();
+
+	while((queue_length > 0 ) || first == true)
+	{
+		first = false;
+		queue_length = waitingLineSTCF(JobsArr, count, current_time, queue_length);
+		bubbleSortSTCF(JobsArr, queue_length, count);
+		if(JobsArr[count].started)
+		{
+			JobsArr[count].setRemainT(JobsArr[count].getRemainT() - 1);
+			current_time++;
+
+			//Check to see if the job is finished
+			if(JobsArr[count].getRemainT() == 0)
+			{
+				JobsArr[count].setFinishT(current_time);
+				JobsArr[count].setResponceT(JobsArr[count].getStartT() - JobsArr[count].getAT());
+				JobsArr[count].setTotalT(JobsArr[count].getFinishT() - JobsArr[count].getAT());
+				queue_length--;
+				count++;
+			}
+		}
+		else
+		{
+			JobsArr[count].setStartT(current_time);
+			JobsArr[count].setRemainT(JobsArr[count].getRemainT() - 1);
+			current_time++;
+
+			//Check to see if the job is finished
+			if(JobsArr[count].getRemainT() == 0)
+			{
+				JobsArr[count].setFinishT(current_time);
+				JobsArr[count].setResponceT(JobsArr[count].getStartT() - JobsArr[count].getAT());
+				JobsArr[count].setTotalT(JobsArr[count].getFinishT() - JobsArr[count].getAT());
+				queue_length--;
+				count++;
+			}
+
+		}
+		
+
+
+	}
+
+	for (int idx = 0; idx < jobcount; idx++)
+	{
+	cout << JobsArr[idx].getJID() << " " << JobsArr[idx].getAT() << " " << JobsArr[idx].getDur() << " " 
+			 << JobsArr[idx].getStartT() << " " << JobsArr[idx].getFinishT() << " " << JobsArr[idx].getTotalT() 
+			 << " " << JobsArr[idx].getResponceT() << endl << endl;
+	}
+
+
+
+}
+
 ///////////Utilities/////////////
 
 int waitingLine(Jobs * JobsArr, int start, int current_time, int queue_length)
@@ -254,6 +331,25 @@ int waitingLine(Jobs * JobsArr, int start, int current_time, int queue_length)
 	{
 		//cout << current_time <<endl;
 			if((JobsArr[idx].getAT() <= current_time))
+			{
+				if(JobsArr[idx].waiting == false)
+				{
+					JobsArr[idx].waiting = true;
+					queue_length++;
+				}
+				
+			}
+			
+	}
+	return queue_length;
+}
+
+int waitingLineSTCF(Jobs * JobsArr, int start, int current_time, int queue_length)
+{
+	for(int idx = 0; idx < jobcount; idx++)
+	{
+		//cout << current_time <<endl;
+			if((JobsArr[idx].getAT() == current_time))
 			{
 				if(JobsArr[idx].waiting == false)
 				{
@@ -344,3 +440,29 @@ void bubbleSortBJF(Jobs * JobsArr, int length, int start)
         break; 
    } 
 } 
+
+void bubbleSortSTCF(Jobs * JobsArr, int length, int start)
+{
+	int i, j; 
+   Jobs Temp;
+   bool swapped; 
+
+   for (i = 0; i < length-1; i++) 
+   { 
+     swapped = false; 
+     for (j = start; j < start + length - i - 1; j++) 
+     { 
+        if (JobsArr[j].getRemainT() > JobsArr[j+1].getRemainT()) 
+        { 
+			Temp = JobsArr[j];
+			JobsArr[j] = JobsArr[j + 1];
+			JobsArr[j + 1] = Temp;
+           	swapped = true; 
+        } 
+     } 
+  
+     // IF no two elements were swapped by inner loop, then break 
+     if (swapped == false) 
+        break; 
+   }	
+}

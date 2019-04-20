@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 
 
@@ -18,6 +19,7 @@ void FIFO(Jobs * JobsArr);
 void SJF(Jobs * JobsArr);
 void BJF(Jobs * JobsArr);
 void STCF(Jobs * JobsArr);
+void RR(Jobs * JobsArr);
 void bubbleSortAT(Jobs * JobsArr) ;
 void bubbleSortSJF(Jobs * JobsArr, int length, int start);
 void bubbleSortBJF(Jobs * JobsArr, int length, int start);
@@ -25,111 +27,79 @@ void bubbleSortSTCF(Jobs * JobsArr, int length, int start);
 int waitingLine(Jobs * JobsArr, int start, int current_time, int queue_length);
 int waitingLineSTCF(Jobs * JobsArr, int start, int current_time, int queue_length);
 
-//I do not like using this global var, but for right now its what is working
 int jobcount;
 
 int main(int argc, char *argv[]) {
 
 	string filelocation;
-	Jobs* JobsArr = new Jobs[100];
-	
-	
+	int choice = 0;
+	bool failed;
+	bool badchoice;
+
+
 	cout<<"Enter location of input file: ";
 	cin>>filelocation;
+	while (1)
+	{
+		failed = true;
+		badchoice = false;
+		Jobs* JobsArr = new Jobs[100];
+		while(failed)
+		{
+			(importjobs(filelocation, JobsArr)) ? failed = false : failed = true;
+			if(failed)
+			{
+				cout << "Bad file location please try again"<< endl << endl;
+				cout << "Enter location of input file: ";
+				cin >> filelocation;
+			}
+		}
 
-	(importjobs(filelocation, JobsArr))? cout <<"jobs imported"<<endl << endl : cout << "failed impoting jobs";
+		cout <<"1. FIFO " << endl << "2. SJF " << endl << "3. BJF" << endl << "4. STCF" << endl <<"5. RR" << endl << "6 Exit" << endl << endl;
+		cout << "What algorithm would you like to run?  ";
+		cin >> choice;
 
-	//FIFO(JobsArr);
+		while(badchoice)
+		{
+			((choice >= 1) && (choice <= 5)) ? badchoice = false: badchoice = true;
 
-	//SJF(JobsArr);
+			if(badchoice)
+			{
+				cout << choice << " is not in the specified range" << endl << endl;
+				cout <<"1. FIFO " << endl << "2. SJF " << endl << "3. BJF" << endl << "4. STCF" << endl <<"5. RR" << endl << "6. Exit" << endl << endl;
+				cout << "What algorithm would you like to run?  ";
+				cout << endl;
+				cin >> choice;
 
-	//BJF(JobsArr);
+			}
+			
+		}
+
+		switch (choice)
+		{
+			case 1:
+				FIFO(JobsArr);
+				break;
+			case 2:
+				SJF(JobsArr);
+				break;
+			case 3:
+				BJF(JobsArr);
+				break;
+			case 4:
+				STCF(JobsArr);
+				break;
+			case 5:
+				RR(JobsArr);
+				break;
+			case 6: 
+				return -1;
+		}
+		jobcount = 0;
+		delete [] JobsArr;
+	}
 	
-	STCF(JobsArr);
-	
-
-
 	return 0;
-}
-//Functions to set up the data we are working with
-bool importjobs(string argFileLocation, Jobs * JobsArr)
-{
-	ifstream jobsfile(argFileLocation);
-	int lineCount;
-	string temp[1000];
-	int idx = 0;
-	//jobsfile.open(argFileLocation);
-	if (jobsfile.fail())
-	{
-		cout <<"error opening file";
-		return -1;
-	}
-
-	cout <<"importing jobs..." << endl;
-
-	//start by counting the number of jobs we will be creating/populating
-	while (!jobsfile.eof())
-	{
-		getline(jobsfile, temp[idx]);
-		lineCount++;
-		idx++;
-	}
-	jobcount = lineCount -1;
-
-	//parse and fill jobs with data
-	for (int i = 0; i <=jobcount; i++)
-	{
-		parseline(temp[i], JobsArr[i]);
-	}
-
-	
-	return true;	
-}
-
-string replaceSpaceTab(string rawInput)
-{
-	bool fstf = false;
-	string commastring = rawInput;
-	//replace the fist 
-	for(char& c : commastring)
-	{
-		if((c == ' ' && !fstf) || (c == '	' && !fstf))
-		{
-			c = '\n';
-			fstf = true;
-		}
-		else if((c == ' ') || (c == '	'))
-		{
-			//do nothing we will handle these next
-		}
-		else
-		{
-			fstf = false;
-		}
-		
-	}
-	commastring.erase(remove(commastring.begin(), commastring.end(), ' '), commastring.end());
-	commastring.erase(remove(commastring.begin(), commastring.end(), '	'), commastring.end());
-
-
-	return commastring;
-}
-
-void parseline(string Input, Jobs& newjob)
-{
-	string csvInput = replaceSpaceTab(Input);
-	int idx = 0;
-	int jobdata[3];
-	stringstream input(csvInput);
-	string data[3];
-	while(getline(input , data[idx]))
-	{
-		jobdata[idx] = stoi(data[idx]);
-		idx++;
-	}
-	newjob.setJID(jobdata[0]);
-	newjob.setAT(jobdata[1]);
-	newjob.setDur(jobdata[2]);
 }
 
 //Schedualing Algorithms
@@ -158,9 +128,9 @@ void FIFO(Jobs * JobsArr)
 			JobsArr[idx].setTotalT(JobsArr[idx].getFinishT() - JobsArr[idx].getAT());
 			current_time = JobsArr[idx].getFinishT();
 		}
-		cout << JobsArr[idx].getJID() << " " << JobsArr[idx].getAT() << " " << JobsArr[idx].getDur() << " " 
-			 << JobsArr[idx].getStartT() << " " << JobsArr[idx].getFinishT() << " " << JobsArr[idx].getTotalT() 
-			 << " " << JobsArr[idx].getResponceT() << endl;
+		cout << "Job ID: " <<JobsArr[idx].getJID() << endl << "Arrival Time: " << JobsArr[idx].getAT() << endl << "Job Durration: " << JobsArr[idx].getDur() << endl 
+		 	 << "Start Time: " << JobsArr[idx].getStartT() << endl << "Finish Time: " << JobsArr[idx].getFinishT() << endl << "Total Time: " << JobsArr[idx].getTotalT() 
+		 	 << endl << "Responce Time: " << JobsArr[idx].getResponceT() << endl << endl;
 	}
 
 	
@@ -197,9 +167,9 @@ void SJF(Jobs * JobsArr)
 		//cout << "count: " << count << " current_time: " << current_time << endl;
 		
 
-		cout << JobsArr[count].getJID() << " " << JobsArr[count].getAT() << " " << JobsArr[count].getDur() << " " 
-			 << JobsArr[count].getStartT() << " " << JobsArr[count].getFinishT() << " " << JobsArr[count].getTotalT() 
-			 << " " << JobsArr[count].getResponceT() << endl << endl;
+		cout << "Job ID: " <<JobsArr[count].getJID() << endl << "Arrival Time: " << JobsArr[count].getAT() << endl << "Job Durration: " << JobsArr[count].getDur() << endl 
+		 	 << "Start Time: " << JobsArr[count].getStartT() << endl << "Finish Time: " << JobsArr[count].getFinishT() << endl << "Total Time: " << JobsArr[count].getTotalT() 
+		 	 << endl << "Responce Time: " << JobsArr[count].getResponceT() << endl << endl;
 		count++;
 		if(queue_length > 0)
 		{
@@ -240,9 +210,9 @@ void BJF(Jobs * JobsArr)
 		//cout << "count: " << count << " current_time: " << current_time << endl;
 		
 
-		cout << JobsArr[count].getJID() << " " << JobsArr[count].getAT() << " " << JobsArr[count].getDur() << " " 
-			 << JobsArr[count].getStartT() << " " << JobsArr[count].getFinishT() << " " << JobsArr[count].getTotalT() 
-			 << " " << JobsArr[count].getResponceT() << endl << endl;
+		cout << "Job ID: " <<JobsArr[count].getJID() << endl << "Arrival Time: " << JobsArr[count].getAT() << endl << "Job Durration: " << JobsArr[count].getDur() << endl 
+		 	 << "Start Time: " << JobsArr[count].getStartT() << endl << "Finish Time: " << JobsArr[count].getFinishT() << endl << "Total Time: " << JobsArr[count].getTotalT() 
+		 	 << endl << "Responce Time: " << JobsArr[count].getResponceT() << endl << endl;
 		count++;
 		if(queue_length > 0)
 		{
@@ -293,6 +263,7 @@ void STCF(Jobs * JobsArr)
 		else
 		{
 			JobsArr[count].setStartT(current_time);
+			JobsArr[count].started = true;
 			JobsArr[count].setRemainT(JobsArr[count].getRemainT() - 1);
 			current_time++;
 
@@ -314,15 +285,96 @@ void STCF(Jobs * JobsArr)
 
 	for (int idx = 0; idx < jobcount; idx++)
 	{
-	cout << JobsArr[idx].getJID() << " " << JobsArr[idx].getAT() << " " << JobsArr[idx].getDur() << " " 
-			 << JobsArr[idx].getStartT() << " " << JobsArr[idx].getFinishT() << " " << JobsArr[idx].getTotalT() 
-			 << " " << JobsArr[idx].getResponceT() << endl << endl;
+		cout << "Job ID: " <<JobsArr[idx].getJID() << endl << "Arrival Time: " << JobsArr[idx].getAT() << endl << "Job Durration: " << JobsArr[idx].getDur() << endl 
+		 	 << "Start Time: " << JobsArr[idx].getStartT() << endl << "Finish Time: " << JobsArr[idx].getFinishT() << endl << "Total Time: " << JobsArr[idx].getTotalT() 
+		 	 << endl << "Responce Time: " << JobsArr[idx].getResponceT() << endl << endl;
 	}
 
 
 
 }
 
+void RR(Jobs * JobsArr)
+{
+	int current_time = 0;
+	int queue_length = 0;
+	int count = 0;
+	bool first = true;
+	int finished = 0;
+	Jobs * finishedJobs = new Jobs[jobcount];
+
+	//sort jobs based on their arrival time
+	bubbleSortAT(JobsArr);
+
+	//set the remaining time for each job
+	for(int idx = 0; idx < jobcount; idx++)
+	{
+		JobsArr[idx].setRemainT(JobsArr[idx].getDur());
+	}
+	//advance to the first job
+	current_time = JobsArr[0].getAT();
+
+	while((queue_length > 0 ) || first == true)
+	{
+		first = false;
+		queue_length = waitingLineSTCF(JobsArr, count, current_time, queue_length);
+		if(JobsArr[count].started)
+		{
+			JobsArr[count].setRemainT(JobsArr[count].getRemainT() - 1);
+			current_time++;
+			if(JobsArr[count].getRemainT() == 0)
+			{
+				JobsArr[count].setFinishT(current_time);
+				JobsArr[count].setResponceT(JobsArr[count].getStartT() - JobsArr[count].getAT());
+				JobsArr[count].setTotalT(JobsArr[count].getFinishT() - JobsArr[count].getAT());
+				JobsArr[count].finished = true;
+				finishedJobs[finished] = JobsArr[count];
+				finished++;
+
+				for(int i = count; i <= queue_length; i++)
+				{
+					JobsArr[i] = JobsArr[i + 1];
+				}
+				queue_length--;
+				
+			}
+			(count >= queue_length - 1) ? count = 0 : count++; 
+		}
+		else
+		{
+			JobsArr[count].setStartT(current_time);
+			JobsArr[count].started = true;
+			JobsArr[count].setRemainT(JobsArr[count].getRemainT() - 1);
+			current_time++;
+			if(JobsArr[count].getRemainT() == 0)
+			{
+				JobsArr[count].setFinishT(current_time);
+				JobsArr[count].setResponceT(JobsArr[count].getStartT() - JobsArr[count].getAT());
+				JobsArr[count].setTotalT(JobsArr[count].getFinishT() - JobsArr[count].getAT());
+				finishedJobs[finished] = JobsArr[count];
+				JobsArr[count].finished = true;
+				finished++;
+				for(int i = count; i = queue_length; i++)
+				{
+					JobsArr[i] = JobsArr[i + 1];
+				}
+				queue_length--;
+				
+			}
+			
+			(count >= queue_length - 1) ? count = 0 : count++; 
+		}
+		
+	}
+	for (int idx = 0; idx < jobcount; idx++)
+	{
+	cout << "Job ID: " <<finishedJobs[idx].getJID() << endl << "Arrival Time: " << finishedJobs[idx].getAT() << endl << "Job Durration: " << finishedJobs[idx].getDur() << endl 
+		 << "Start Time: " << finishedJobs[idx].getStartT() << endl << "Finish Time: " << finishedJobs[idx].getFinishT() << endl << "Total Time: " << finishedJobs[idx].getTotalT() 
+		 << endl << "Responce Time: " << finishedJobs[idx].getResponceT() << endl << endl;
+	}
+
+
+}
 ///////////Utilities/////////////
 
 int waitingLine(Jobs * JobsArr, int start, int current_time, int queue_length)
@@ -465,4 +517,84 @@ void bubbleSortSTCF(Jobs * JobsArr, int length, int start)
      if (swapped == false) 
         break; 
    }	
+}
+
+bool importjobs(string argFileLocation, Jobs * JobsArr)
+{
+	ifstream jobsfile(argFileLocation);
+	int lineCount = 0;
+	string temp[1000];
+	int idx = 0;
+	//jobsfile.open(argFileLocation);
+	if (jobsfile.fail())
+	{
+		cout <<"error opening file";
+		return false;
+	}
+
+	cout << endl <<"importing jobs..." << endl << endl;
+
+	//start by counting the number of jobs we will be creating/populating
+	while (!jobsfile.eof())
+	{
+		getline(jobsfile, temp[idx]);
+		lineCount++;
+		idx++;
+	}
+	jobcount = lineCount -1;
+
+	//parse and fill jobs with data
+	for (int i = 0; i <=jobcount; i++)
+	{
+		parseline(temp[i], JobsArr[i]);
+	}
+
+	
+	return true;	
+}
+
+string replaceSpaceTab(string rawInput)
+{
+	bool fstf = false;
+	string commastring = rawInput;
+	//replace the fist 
+	for(char& c : commastring)
+	{
+		if((c == ' ' && !fstf) || (c == '	' && !fstf))
+		{
+			c = '\n';
+			fstf = true;
+		}
+		else if((c == ' ') || (c == '	'))
+		{
+			//do nothing we will handle these next
+		}
+		else
+		{
+			fstf = false;
+		}
+		
+	}
+	commastring.erase(remove(commastring.begin(), commastring.end(), ' '), commastring.end());
+	commastring.erase(remove(commastring.begin(), commastring.end(), '	'), commastring.end());
+
+
+	return commastring;
+}
+
+void parseline(string Input, Jobs& newjob)
+{
+	string csvInput = replaceSpaceTab(Input);
+	int idx = 0;
+	int jobdata[3];
+	stringstream input(csvInput);
+	string data[3];
+	while(getline(input , data[idx]))
+	{
+		jobdata[idx] = stoi(data[idx]);
+		idx++;
+	}
+	newjob.setJID(jobdata[0]);
+	newjob.setAT(jobdata[1]);
+	newjob.setDur(jobdata[2]);
 }

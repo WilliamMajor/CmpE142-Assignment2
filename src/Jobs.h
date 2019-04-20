@@ -9,7 +9,7 @@ class Jobs
     public:
         Jobs();
         Jobs(int JID, int AT, int Dur);
-        virtual ~Jobs();
+        ~Jobs();
         int getJID() const;
         int getAT() const;
         int getDur() const;
@@ -28,6 +28,7 @@ class Jobs
         void setRemainT(int argRemainT);
         bool waiting;
         bool started;
+        bool finished;
     private:
         int JID;
         int AT;

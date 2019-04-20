@@ -17,6 +17,7 @@ Jobs::Jobs()
     RemainT     = 0;
     waiting     = false;
     started     = false;
+    finished    = false;
 }
 
 Jobs::~Jobs()
